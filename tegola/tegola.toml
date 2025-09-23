@@ -1,0 +1,106 @@
+# tegola/tegola.toml — corrected with buffers
+
+[webserver]
+port = ":8080"
+
+[cache]
+type = "file"
+basepath = "/tmp/tegola_cache"
+
+[[providers]]
+name = "postgis_provider"
+type = "postgis"
+uri = "postgres://postgres:postgres@db:5432/cartalex_basileia_3857"
+
+  [[providers.layers]]
+  name = "emprises_data"
+  tablename = "public.emprises"
+  geometry_fieldname = "geom"
+  id_fieldname = "fid"
+  srid = 3857
+  buffer = 64
+  dont_simplify = true
+
+  [[providers.layers]]
+  name = "espaces_publics_data"
+  tablename = "public.espaces_publics"
+  geometry_fieldname = "geom"
+  id_fieldname = "fid"
+  srid = 3857
+  buffer = 64
+  dont_simplify = true
+
+  [[providers.layers]]
+  name = "littoral_data"
+  tablename = "public.littoral"
+  geometry_fieldname = "geom"
+  id_fieldname = "fid"
+  srid = 3857
+  buffer = 64
+  dont_simplify = true
+
+  [[providers.layers]]
+  name = "noms_rues_data"
+  tablename = "public.noms_rues"
+  geometry_fieldname = "geom"
+  id_fieldname = "fid"
+  srid = 3857
+  buffer = 64
+  dont_simplify = true
+
+  [[providers.layers]]
+  name = "parcelles_region_data"
+  tablename = "public.parcelles_region"
+  geometry_fieldname = "geom"
+  id_fieldname = "fid"
+  srid = 3857
+  buffer = 64
+  dont_simplify = true
+
+  [[providers.layers]]
+  name = "sites_fouilles_data"
+  tablename = "public.sites_fouilles"
+  geometry_fieldname = "geom"
+  id_fieldname = "fid"
+  srid = 3857
+  # NOTE: Points do not need a buffer or simplification settings.
+
+[[maps]]
+name = "cartalex"
+center = [29.9187, 31.2001, 10.0]
+
+  [[maps.layers]]
+  provider_layer = "postgis_provider.emprises_data"
+  name = "emprises"
+  min_zoom = 0
+  max_zoom = 22
+
+  [[maps.layers]]
+  provider_layer = "postgis_provider.espaces_publics_data"
+  name = "espaces_publics"
+  min_zoom = 0
+  max_zoom = 22
+
+  [[maps.layers]]
+  provider_layer = "postgis_provider.littoral_data"
+  name = "littoral"
+  min_zoom = 0
+  max_zoom = 22
+
+  [[maps.layers]]
+  provider_layer = "postgis_provider.noms_rues_data"
+  name = "noms_rues"
+  min_zoom = 0
+  max_zoom = 22
+
+  [[maps.layers]]
+  provider_layer = "postgis_provider.parcelles_region_data"
+  name = "parcelles_region"
+  min_zoom = 0
+  max_zoom = 22
+
+  [[maps.layers]]
+  provider_layer = "postgis_provider.sites_fouilles_data"
+  name = "sites_fouilles"
+  min_zoom = 0
+  max_zoom = 22

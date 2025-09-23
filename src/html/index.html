@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Cartalex - Centre d'Études Alexandrines WebSIG platform">
+    <title>Cartalex</title>
+    <link rel="icon" type="image/jpeg" href="../img/menu.jpg">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        .header {
+            overflow: hidden;
+            background-color: white;
+            color: black;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        h2 {
+            font-family: "Open Sans", Helvetica, Arial, sans-serif;
+            ;
+        }
+
+        #menu ul {
+            font-family: "Open Sans", Helvetica, Arial, sans-serif;
+            ;
+            background: whitesmoke;
+            text-align: center;
+            padding: 20px;
+            margin-top: 10px;
+            margin-bottom: 0;
+            border-radius: 10px;
+            list-style-type: none;
+            font-size: 100%;
+        }
+
+        #menu ul li {
+            display: inline;
+        }
+
+        #menu ul li a {
+            color: black;
+            text-decoration: none;
+            padding-left: 30px;
+            padding-right: 30px;
+            transition: 0.5s;
+        }
+
+        #menu ul li a:hover {
+            background: black;
+            color: white;
+            border-radius: 10px;
+            font-size: 120%;
+            transition: 0.5s;
+        }
+
+        #floatingMenu img {
+            width: 30px;
+            float: right;
+            margin-left: 2px;
+            margin-top: 2px;
+            display: none;
+        }
+
+        /* The side navigation menu W3Schools*/
+        .sidenav {
+            opacity: 0.9;
+            height: 100%;
+            /* 100% Full-height */
+            width: 0;
+            /* 0 width - change this with JavaScript */
+            position: fixed;
+            /* Stay in place */
+            z-index: 1;
+            /* Stay on top */
+            top: 0;
+            /* Stay at the top */
+            left: 0;
+            background-color: #111;
+            /* Black*/
+            overflow-x: hidden;
+            /* Disable horizontal scroll */
+            padding-top: 60px;
+            /* Place content 60px from the top */
+            transition: 0.5s;
+            /* 0.5 second transition effect to slide in the sidenav */
+        }
+
+        /* The navigation menu links */
+        .sidenav a {
+            padding: 8px 8px 8px 32px;
+            text-decoration: none;
+            font-size: 25px;
+            color: #818181;
+            display: block;
+            transition: 0.3s;
+        }
+
+        /* When you mouse over the navigation links, change their color */
+        .sidenav a:hover {
+            color: #f1f1f1;
+        }
+
+        /* Position and style the close button (top right corner) */
+        .sidenav .closebtn {
+            position: absolute;
+            top: 0;
+            right: 25px;
+            font-size: 36px;
+            margin-left: 50px;
+        }
+
+        /* Style page content - use this if you want to push the page content to the right when you open the side navigation */
+        #main {
+            transition: margin-left .5s;
+            padding: 20px;
+        }
+
+        /* On smaller screens, where height is less than 450px, change the style of the sidenav (less padding and a smaller font size) */
+        @media screen and (max-height: 450px) {
+            .sidenav {
+                padding-top: 15px;
+            }
+
+            .sidenav a {
+                font-size: 18px;
+            }
+        }
+
+        @media screen and (max-width: 800px) {
+            #leftColumn {
+                width: 100%;
+                padding: 0;
+            }
+
+            #menu {
+                display: none;
+            }
+
+            #floatingMenu img {
+                display: flex;
+            }
+        }
+
+        #footer {
+            background: black;
+            text-align: center;
+            color: white;
+            position: fixed;
+            padding: 20px 20px 20px 20px;
+            margin-bottom: 10px;
+            bottom: 0;
+            width: 99%;
+            border-radius: 10px;
+            clear: both;
+            font-size: 120%;
+        }
+
+        #footer a:visited {
+            color: white;
+        }
+
+        .skip-link {
+            position: absolute;
+            left: -999px;
+            top: auto;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            z-index: 100;
+        }
+
+        .skip-link:focus {
+            left: 0;
+            top: 0;
+            width: auto;
+            height: auto;
+            background: #000;
+            color: #fff;
+            padding: 8px;
+        }
+
+    </style>
+    <script type="module" src="../js/js.js"></script>
+</head>
+
+<body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <header class="header" role="banner">
+        <div id="floatingMenu">
+            <picture>
+                <img src="../img/menu.jpg" alt="Open navigation menu" id="openMenuBtn" loading="lazy">
+            </picture>
+        </div>
+        <nav id="mySidenav" class="sidenav" aria-label="Side navigation">
+            <a href="javascript:void(0)" class="closebtn" id="closeMenuBtn" aria-label="Close navigation">&times;</a>
+            <a href="http://85.234.139.116" rel="noopener">Présentation</a>
+            <a href="https://www.cealex.org/le-cealex/" target="_blank" rel="noopener">Le CEAlex</a>
+            <a href="http://85.234.139.116/carte" target="_blank" rel="noopener">Carte</a>
+            <a href="bibliographe.html">Bibliographie</a>
+        </nav>
+        <a href="http://85.234.139.116">
+            <picture>
+                <img src="../img/logo.png" width="400" style="padding-left: 200px;" alt="Centre d'Études Alexandrines logo" loading="lazy">
+            </picture>
+        </a>
+        <div style="padding-left: 200px;">
+            <h1>CENTRE D'ÉTUDES ALEXANDRINES</h1>
+            <p>&ThinSpace;UAR 3134</p>
+        </div>
+    </header>
+    <nav id="menu" aria-label="Main navigation">
+        <ul>
+            <li><a href="/" aria-current="page">Présentation</a></li>
+            <li><a href="https://www.cealex.org/le-cealex/" target="_blank" rel="noopener">Le CEAlex</a></li>
+            <li><a href="/carte" target="_blank" rel="noopener">Carte</a></li>
+            <li><a href="bibliographe.html">Bibliographie</a></li>
+        </ul>
+    </nav>
+    <main id="main-content" tabindex="-1">
+        <!-- Main content would go here -->
+        <!-- Example: Button to load sidebar dynamically (code splitting) -->
+        <button id="loadSidebarBtn" type="button">Load Sidebar</button>
+    </main>
+    <footer id="footer" role="contentinfo">
+        <em>Copyright &copy; 2023 Centre d'Études Alexandrines –
+            <a href="https://www.cealex.org/mentions-legales/" target="_blank" rel="noopener">Mentions legales</a>
+        </em>
+    </footer>
+    <script type="module">
+    import { openNav, closeNav } from '../js/js.js';
+    document.getElementById('openMenuBtn').addEventListener('click', openNav);
+    document.getElementById('closeMenuBtn').addEventListener('click', closeNav);
+    </script>
+</body>
+
+</html>

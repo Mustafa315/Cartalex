@@ -4,20 +4,37 @@ import { addWhereVestiges, addWhereDecouvertes, addWhereBiblio, addOrderAliasOnS
 
 const router = express.Router();
 
-// ... (other routes remain the same) ...
 router.get('/', (req, res) => res.render('index.html'));
 router.get('/carte', (req, res) => res.render('map.html'));
 
 router.get('/getValues/:tableName', cacheMiddleware, addOrderAliasOnSelectDistinct, async (req, res, next) => {
     const { tableName } = req.params;
     let dbquery = res.locals.selectQuery;
+    
+    // --- CORRECTED SWITCH STATEMENT ---
+    // This now correctly handles the 'parcellesRegion' table name sent from the frontend.
     switch (tableName) {
-        case 'vestiges': dbquery += ' FROM vestiges JOIN datations ON vestiges.id = datations.id_vestige JOIN caracterisations ON vestiges.id_caracterisation = caracterisations.id JOIN periodes ON datations.id_periode = periodes.id'; break;
-        case 'bibliographies': dbquery += ' FROM bibliographies JOIN personnes ON bibliographies.id_auteur1 = personnes.id'; break;
-        case 'periodes': dbquery += ' FROM periodes'; break;
-        case 'decouvertes': dbquery += ' FROM decouvertes JOIN personnes ON decouvertes.id_inventeur = personnes.id'; break;
-        default: return res.status(404).json({ error: 'Table not found' });
+        case 'vestiges': 
+            dbquery += ' FROM vestiges JOIN datations ON vestiges.id = datations.id_vestige JOIN caracterisations ON vestiges.id_caracterisation = caracterisations.id JOIN periodes ON datations.id_periode = periodes.id'; 
+            break;
+        case 'bibliographies': 
+            dbquery += ' FROM bibliographies JOIN personnes ON bibliographies.id_auteur1 = personnes.id'; 
+            break;
+        case 'periodes': 
+            dbquery += ' FROM periodes'; 
+            break;
+        case 'decouvertes': 
+            dbquery += ' FROM decouvertes JOIN personnes ON decouvertes.id_inventeur = personnes.id'; 
+            break;
+        case 'parcellesRegion': // Correctly handles the camelCase name from the filter config
+            dbquery += ` FROM public.parcelles_region`; 
+            break;
+        default: 
+            // This was the source of the error. Now it will only be hit if the table is truly unknown.
+            return res.status(404).json({ error: 'Table not found' });
     }
+    // --- END CORRECTION ---
+
     dbquery += res.locals.orderQuery;
     try {
         const values = await db.any(dbquery);
@@ -73,17 +90,38 @@ router.get('/sitesFouilles/bibliographies', addWhereBiblio, async (req, res, nex
     }
 });
 
-// ** START: NEW ROUTE FOR POPUP DETAILS **
+router.get('/parcellesRegion/general', async (req, res, next) => {
+    let whereClause = "";
+    const conditions = [];
+    if (req.query.nom) {
+        const noms = req.query.nom.split('|').map(val => `'${val.replace(/'/g, "''")}'`).join(',');
+        conditions.push(`nom IN (${noms})`);
+    }
+    if (req.query.numero) {
+        const numeros = req.query.numero.split('|').map(val => `'${val.replace(/'/g, "''")}'`).join(',');
+        conditions.push(`numero IN (${numeros})`);
+    }
+
+    if (conditions.length > 0) {
+        whereClause = ' WHERE ' + conditions.join(' AND ');
+    }
+
+    const dbquery = `SELECT fid as id FROM parcelles_region${whereClause}`;
+    try {
+        const values = await db.any(dbquery);
+        res.json(values);
+    } catch (error) {
+        next(error);
+    }
+});
+
 router.get('/sitesFouilles/:fid/details', async (req, res, next) => {
     const { fid } = req.params;
     try {
-        // Query 1: Get the main site details
         const site = await db.oneOrNone('SELECT id, num_tkaczow, commentaire FROM sites_fouilles WHERE fid = $1', [fid]);
         if (!site) {
             return res.status(404).json({ error: 'Site not found' });
         }
-
-        // Query 2: Get associated vestiges
         const vestiges = await db.any(`
             SELECT c.caracterisation, p.periode FROM vestiges v
             JOIN caracterisations c ON v.id_caracterisation = c.id
@@ -91,8 +129,6 @@ router.get('/sitesFouilles/:fid/details', async (req, res, next) => {
             LEFT JOIN periodes p ON d.id_periode = p.id
             WHERE v.id_site = $1
         `, [site.id]);
-
-        // Query 3: Get associated discoveries and bibliographies
         const bibliographies = await db.any(`
             SELECT DISTINCT b.nom_document FROM bibliographies b
             JOIN "references_biblio" rb ON b.id = rb.id_biblio
@@ -100,18 +136,14 @@ router.get('/sitesFouilles/:fid/details', async (req, res, next) => {
             WHERE d.id_site = $1
         `, [site.id]);
         
-        // Combine and send the response
         res.json({
             details: site,
             vestiges: vestiges,
             bibliographies: bibliographies
         });
-
     } catch (error) {
         next(error);
     }
 });
-// ** END: NEW ROUTE FOR POPUP DETAILS **
-
 
 export default router;

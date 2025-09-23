@@ -1,8 +1,8 @@
-// ... (buildFilterUI function is unchanged) ...
 export function buildFilterUI(filters) {
   const container = document.getElementById('volet_haut');
   if (!container) return;
   
+  // This function now correctly builds the UI from a simple 'filters' object
   let html = '<div class="filter-collection-content">';
   for (const filterName in filters) {
     const filter = filters[filterName];
@@ -39,9 +39,6 @@ export function buildFilterUI(filters) {
   container.innerHTML = html;
 }
 
-
-// ** START: LOGIC UPDATE **
-// The function now accepts historicalMapIds to know which layers get a slider
 export function buildLayerList(layers, map, historicalMapIds = []) {
     const container = document.getElementById('items');
     if (!container) return;
@@ -49,8 +46,9 @@ export function buildLayerList(layers, map, historicalMapIds = []) {
     let html = '';
     layers.forEach(layer => {
         let layerName = layer.id.replace(/-/g, ' ');
-        if (layer.source === 'cartalex') {
-            layerName = layer['source-layer'].replace(/_/g, ' ');
+        // Clean up the layer name for display in the list
+        if (layer.source === 'tegola_points' || (layer.source && layer.source.endsWith('_source'))) {
+            layerName = layer['source-layer'].replace(/public\./, '').replace(/_/g, ' ');
         }
 
         const isVisible = map.getLayoutProperty(layer.id, 'visibility') !== 'none';
@@ -62,8 +60,6 @@ export function buildLayerList(layers, map, historicalMapIds = []) {
                 <label for="layer-${layer.id}">${layerName}</label>
         `;
 
-        // --- START: NEW CODE TO ADD SLIDER ---
-        // If the layer is a historical map, add an opacity slider
         if (historicalMapIds.includes(layer.id)) {
             html += `
                 <div class="slider-container" style="display: ${isVisible ? 'block' : 'none'};">
@@ -71,17 +67,13 @@ export function buildLayerList(layers, map, historicalMapIds = []) {
                 </div>
             `;
         }
-        // --- END: NEW CODE TO ADD SLIDER ---
-
         html += `</li>`;
     });
     container.innerHTML = html;
 }
-// ** END: LOGIC UPDATE **
 
-// ... (attachAllEventListeners function is unchanged) ...
 export function attachAllEventListeners(filters, onFilterChangeCallback, onLayerToggleCallback, onOpacityChangeCallback) {
-  // --- Top Filter Panel Logic ---
+  // --- This logic now runs without errors, allowing the panels to work ---
   const voletHautClos = document.getElementById('volet_haut_clos');
   const voletHaut = document.getElementById('volet_haut');
   const openFilterBtn = voletHautClos.querySelector('.onglets_haut a.ouvrir');
@@ -91,7 +83,6 @@ export function attachAllEventListeners(filters, onFilterChangeCallback, onLayer
     closeFilterBtn.addEventListener('click', (e) => { e.preventDefault(); voletHaut.classList.remove('is-open'); });
   }
 
-  // --- Left Layer Panel Logic ---
   const voletGaucheClos = document.getElementById('volet_gauche_clos');
   const voletGauche = document.getElementById('volet_gauche');
   const openLayerBtn = voletGaucheClos.querySelector('.onglets_gauche a.ouvrir');
@@ -115,37 +106,48 @@ export function attachAllEventListeners(filters, onFilterChangeCallback, onLayer
     });
   });
 
-  // --- Filter Checkbox Logic ---
+  // --- Corrected Filter Checkbox Logic for a single filter object ---
   document.querySelectorAll('.subfilter-content input[type="checkbox"]').forEach(checkbox => {
     checkbox.addEventListener('change', (e) => {
       const { name, value, checked } = e.target;
-      const filterName = e.target.closest('.filter-content').querySelector('.filter-name').textContent.toLowerCase();
+      // This robustly finds the filter name (e.g., 'vestiges')
+      const filterContent = e.target.closest('.filter-content');
+      const filterNameButton = filterContent ? filterContent.querySelector('.filter-name') : null;
+      if (!filterNameButton) return;
+
+      const filterName = filterNameButton.textContent.trim().toLowerCase();
+      
       const filter = filters[filterName];
+      if (!filter) return;
+
       const subFilter = filter.getSubFilter(name);
-      if (checked) subFilter.checkValue(value);
-      else subFilter.unCheckValue(value);
+       if (!subFilter) return;
+
+      if (checked) {
+        subFilter.checkValue(value);
+      } else {
+        subFilter.unCheckValue(value);
+      }
+
       filter.active = filter.getSubFilters().some(sf => sf.getSelectedValues().length > 0);
       onFilterChangeCallback();
     });
   });
 
-  // --- Layer Checkbox Logic ---
+  // --- Layer Checkbox & Slider Logic ---
   document.querySelectorAll('#items input[type="checkbox"]').forEach(checkbox => {
       checkbox.addEventListener('change', (e) => {
           const layerId = e.target.dataset.layerId;
           const isVisible = e.target.checked;
           onLayerToggleCallback(layerId, isVisible);
           
-          // --- START: NEW CODE TO SHOW/HIDE SLIDER ---
           const sliderContainer = e.target.closest('.listitem').querySelector('.slider-container');
           if (sliderContainer) {
               sliderContainer.style.display = isVisible ? 'block' : 'none';
           }
-          // --- END: NEW CODE TO SHOW/HIDE SLIDER ---
       });
   });
 
-  // --- START: NEW EVENT LISTENER FOR SLIDERS ---
   document.querySelectorAll('.opacity-slider').forEach(slider => {
     slider.addEventListener('input', (e) => {
         const layerId = e.target.dataset.layerId;
@@ -153,5 +155,4 @@ export function attachAllEventListeners(filters, onFilterChangeCallback, onLayer
         onOpacityChangeCallback(layerId, opacityValue);
     });
   });
-  // --- END: NEW EVENT LISTENER FOR SLIDERS ---
 }

@@ -21,11 +21,18 @@ export class SubFilter {
     }
 
     async initValues(){
+        let values;
         if(!this.isNumeric){
-            var values =  await getValuesFromSubFilter(this);
-            console.log("Received values : ", values)
+            values =  await getValuesFromSubFilter(this);
+            console.log("Received values : ", values);
+            // --- ADDED: Check if the response is a valid array ---
+            if (!Array.isArray(values)) {
+                console.warn(`Expected an array for ${this.name}, but received:`, values);
+                values = []; // Default to an empty array to prevent crashing
+            }
+            // --- END CORRECTION ---
         } else {
-            var values = [
+            values = [
                 {
                     ceil: null,
                     floor: null

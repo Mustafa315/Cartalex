@@ -8,88 +8,43 @@ const map = new maplibregl.Map({
     style: {
         version: 8,
         sources: {
-            // --- YOUR ORIGINAL SOURCES (UNCHANGED) ---
-            osm: {
-                type: 'raster',
-                tiles: ['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png'],
-                tileSize: 256,
-                attribution: '&copy; OpenStreetMap Contributors',
-            },
-            satellite: {
-                type: 'raster',
-                tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
-                tileSize: 256,
-                attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
-            },
-            cartalex: {
-                type: 'vector',
-                tiles: ['http://localhost:8080/maps/cartalex/{z}/{x}/{y}.pbf'],
-                minzoom: 0,
-                maxzoom: 22,
-            },
+            // --- BASEMAP SOURCES ---
+            osm: { type: 'raster', tiles: ['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png'], tileSize: 256, attribution: '&copy; OpenStreetMap Contributors' },
+            satellite: { type: 'raster', tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'], tileSize: 256, attribution: 'Tiles &copy; Esri' },
+            
+            // --- TEGOLA SOURCE (POINTS) ---
+            tegola_points: { type: 'vector', tiles: ['http://localhost:8080/maps/cartalex/{z}/{x}/{y}.pbf'], minzoom: 0, maxzoom: 22 },
 
-            // --- ADDED: SOURCES FOR YOUR THREE HISTORICAL MAPS ---
-            "plan-adriani": {
-                "type": "raster",
-                "tiles": ["/adriani/{z}/{x}/{y}.png"],
-                "tileSize": 256,
-                "attribution": "Plan Adriani 1934"
-            },
-            "plan-tkaczow": {
-                "type": "raster",
-                "tiles": ["/tkaczow/{z}/{x}/{y}.png"],
-                "tileSize": 256,
-                "attribution": "Plan Tkaczow 1993"
-            },
-            "plan-falaky": {
-                "type": "raster",
-                "tiles": ["/falaky/{z}/{x}/{y}.png"],
-                "tileSize": 256,
-                "attribution": "Restitution de Mahmoud Bey el-Falaki, 1866"
-            }
+            // --- PG_TILESERV SOURCES (ONE PER LAYER) ---
+            pgts_parcelles_region: { type: 'vector', tiles: ['http://localhost:7800/public.parcelles_region/{z}/{x}/{y}.pbf'], minzoom: 0, maxzoom: 22 },
+            pgts_espaces_publics: { type: 'vector', tiles: ['http://localhost:7800/public.espaces_publics/{z}/{x}/{y}.pbf'], minzoom: 0, maxzoom: 22 },
+            pgts_emprises: { type: 'vector', tiles: ['http://localhost:7800/public.emprises/{z}/{x}/{y}.pbf'], minzoom: 0, maxzoom: 22 },
+            pgts_noms_rues: { type: 'vector', tiles: ['http://localhost:7800/public.noms_rues/{z}/{x}/{y}.pbf'], minzoom: 0, maxzoom: 22 },
+            pgts_littoral: { type: 'vector', tiles: ['http://localhost:7800/public.littoral/{z}/{x}/{y}.pbf'], minzoom: 0, maxzoom: 22 },
+
+            // --- HISTORICAL MAP SOURCES ---
+            "plan-adriani": { type: "raster", tiles: ["/adriani/{z}/{x}/{y}.png"], tileSize: 256, attribution: "Plan Adriani 1934" },
+            "plan-tkaczow": { type: "raster", tiles: ["/tkaczow/{z}/{x}/{y}.png"], tileSize: 256, attribution: "Plan Tkaczow 1993" },
+            "plan-falaky":  { type: "raster", tiles: ["/falaky/{z}/{x}/{y}.png"],  tileSize: 256, attribution: "Restitution de Mahmoud Bey el-Falaki, 1866" }
         },
         layers: [
-            // --- YOUR ORIGINAL BASE LAYERS (UNCHANGED) ---
-            { 
-                id: 'osm-background', 
-                type: 'raster', 
-                source: 'osm',
-                layout: { 'visibility': 'visible' }
-            },
-            { 
-                id: 'satellite-background', 
-                type: 'raster', 
-                source: 'satellite',
-                layout: { 'visibility': 'none' }
-            },
+            // --- BASE & HISTORICAL LAYERS ---
+            { id: 'osm-background', type: 'raster', source: 'osm', layout: { 'visibility': 'visible' } },
+            { id: 'satellite-background', type: 'raster', source: 'satellite', layout: { 'visibility': 'none' } },
+            { id: "Plan Adriani (1934)", type: "raster", source: "plan-adriani", layout: { "visibility": "none" } },
+            { id: "Plan Tkaczow (1993)", type: "raster", source: "plan-tkaczow", layout: { "visibility": "none" } },
+            { id: "Plan Falaky (1866)",  type: "raster", source: "plan-falaky",  layout: { "visibility": "none" } },
             
-            // --- ADDED: LAYERS FOR YOUR THREE HISTORICAL MAPS ---
-            {
-                "id": "Plan Adriani (1934)",
-                "type": "raster",
-                "source": "plan-adriani",
-                "layout": { "visibility": "none" }
-            },
-            {
-                "id": "Plan Tkaczow (1993)",
-                "type": "raster",
-                "source": "plan-tkaczow",
-                "layout": { "visibility": "none" }
-            },
-            {
-                "id": "Plan Falaky (1866)",
-                "type": "raster",
-                "source": "plan-falaky",
-                "layout": { "visibility": "none" }
-            },
+            // --- THE CRITICAL FIX IS HERE ---
+            // The 'source-layer' for pg_tileserv must match the schema and table name.
+            { id: 'parcelles_region-fill', type: 'fill', source: 'pgts_parcelles_region', 'source-layer': 'public.parcelles_region', paint: { 'fill-color': 'rgba(128, 0, 128, 0.4)', 'fill-outline-color': '#303030' } },
+            { id: 'espaces_publics-fill',  type: 'fill', source: 'pgts_espaces_publics',  'source-layer': 'public.espaces_publics',  paint: { 'fill-color': 'rgba(128, 0, 128, 0.92)', 'fill-outline-color': '#303030' } },
+            { id: 'emprises-fill',         type: 'fill', source: 'pgts_emprises',         'source-layer': 'public.emprises',         paint: { 'fill-color': 'rgba(255, 190, 190, 0.4)', 'fill-outline-color': '#303030' } },
+            { id: 'noms_rues-line',        type: 'line', source: 'pgts_noms_rues',        'source-layer': 'public.noms_rues',        paint: { 'line-color': 'rgba(100, 100, 100, 0.8)', 'line-width': 2 } },
+            { id: 'littoral-line',         type: 'line', source: 'pgts_littoral',         'source-layer': 'public.littoral',         paint: { 'line-color': 'rgba(0, 100, 200, 0.8)', 'line-width': 2 } },
             
-            // --- YOUR ORIGINAL TEGOLA VECTOR LAYERS (UNCHANGED) ---
-            { id: 'parcelles_region-fill', type: 'fill', source: 'cartalex', 'source-layer': 'parcelles_region', paint: { 'fill-color': 'rgba(128, 0, 128, 0.4)' } },
-            { id: 'espaces_publics-fill', type: 'fill', source: 'cartalex', 'source-layer': 'espaces_publics', paint: { 'fill-color': 'rgba(128, 0, 128, 0.4)' } },
-            { id: 'emprises-fill', type: 'fill', source: 'cartalex', 'source-layer': 'emprises', paint: { 'fill-color': 'rgba(128, 0, 128, 0.4)' } },
-            { id: 'noms_rues-line', type: 'line', source: 'cartalex', 'source-layer': 'noms_rues', paint: { 'line-color': 'rgba(255, 165, 0, 0.8)', 'line-width': 2 } },
-            { id: 'littoral-line', type: 'line', source: 'cartalex', 'source-layer': 'littoral', paint: { 'line-color': 'rgba(255, 165, 0, 0.8)', 'line-width': 2 } },
-            { id: 'sites_fouilles-points', type: 'circle', source: 'cartalex', 'source-layer': 'sites_fouilles', paint: { 'circle-radius': 6, 'circle-color': 'rgba(0, 150, 255, 0.9)', 'circle-stroke-color': 'white', 'circle-stroke-width': 1.5 } }
+            // --- POINT LAYER from TEGOLA ---
+            { id: 'sites_fouilles-points', type: 'circle', source: 'tegola_points', 'source-layer': 'sites_fouilles', paint: { 'circle-radius': 6, 'circle-color': 'rgba(0, 150, 255, 0.9)', 'circle-stroke-color': 'white', 'circle-stroke-width': 1.5 } }
         ]
     },
     center: [29.9187, 31.2001],

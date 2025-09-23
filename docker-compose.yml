@@ -26,11 +26,26 @@ services:
     command: serve --config /etc/tegola/config.toml
     volumes:
       - ./tegola/tegola.toml:/etc/tegola/config.toml
+    environment:
+      - TEGOLA_WEBSERVER_CORS_ALLOW_ORIGIN=*
     depends_on:
       db:
         condition: service_healthy
     restart: unless-stopped
 
+  pgtileserv:
+    image: pramsey/pg_tileserv
+    container_name: cartalex_pgtileserv
+    ports:
+      - "7800:7800"
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/cartalex_basileia_3857
+      # --- ADD THIS LINE TO FIX CORS FOR POLYGONS ---
+      - CORS_ORIGIN=*
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
 
   app:
     build: .
@@ -47,6 +62,7 @@ services:
     depends_on:
       - db
       - tegola
+      - pgtileserv
     restart: unless-stopped
 
 volumes:

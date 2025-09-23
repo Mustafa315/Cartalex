@@ -73,5 +73,6 @@
             ]
         }
     ]
-}
- export const api_at = "http://85.234.139.116:3000"
+    // The parcellesRegion filter object has been removed from here.
+};
+ export const api_at = "http://85.234.139.116:3000";

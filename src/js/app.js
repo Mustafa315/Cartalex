@@ -7,52 +7,51 @@ import { buildFilterUI, buildLayerList, attachAllEventListeners } from './ui.js'
 export class App {
   constructor(map) {
     this.map = map;
-    this.filterCollection = null;
+    // This will hold the collection of filters for "sitesFouilles"
+    this.filterCollection = null; 
     this.popup = null;
-    // --- START: NEW CODE ---
-    // Define the IDs of your historical maps. This is important for the UI.
     this.historicalMapIds = [
       "Plan Adriani (1934)",
       "Plan Tkaczow (1993)",
       "Plan Falaky (1866)"
     ];
-    // --- END: NEW CODE ---
   }
 
   async initialize() {
     console.log('Initializing application...');
-    await this.initFilters();
-    this.initLayerList();
-    this.initEventListeners();
-    this.initMapClickListener();
+    try {
+      await this.initFilters();
+      this.initLayerList();
+      this.initEventListeners();
+      this.initMapClickListener();
+      console.log('Application initialized successfully.');
+    } catch (error) {
+      console.error("Failed to initialize the application:", error);
+    }
   }
 
   async initFilters() {
+    // We only initialize the filters for the 'sitesFouilles' layer
     const layerName = 'sitesFouilles';
     this.filterCollection = new FilterCollection(layerName, filters_config[layerName], server_config.api_at);
     await this.filterCollection.initFilters();
+    
+    // We pass the specific filters object to the UI builder
     buildFilterUI(this.filterCollection.getFilters());
   }
 
   initLayerList() {
-    // ** START: LOGIC UPDATE **
-    // Get ALL layers from the map's style, not just the ones from Tegola.
     const allLayers = this.map.getStyle().layers;
-    // Pass the list of historical map IDs to the buildLayerList function
     buildLayerList(allLayers, this.map, this.historicalMapIds);
-    // ** END: LOGIC UPDATE **
   }
   
-  // ... (the rest of the file is unchanged) ...
   initEventListeners() {
+    // We pass the specific filters object to the event listener function
     attachAllEventListeners(
       this.filterCollection.getFilters(),
       async () => { await this.updateMapFilter(); },
       (layerId, isVisible) => { this.toggleLayerVisibility(layerId, isVisible); },
-      // --- START: NEW CODE ---
-      // Pass the new setLayerOpacity function to the event listeners
       (layerId, opacity) => { this.setLayerOpacity(layerId, opacity); }
-      // --- END: NEW CODE ---
     );
   }
 
@@ -96,15 +95,11 @@ export class App {
     this.map.setLayoutProperty(layerId, 'visibility', visibility);
   }
 
-  // --- START: NEW FUNCTION ---
-  // This function changes the opacity of a raster layer on the map
   setLayerOpacity(layerId, opacity) {
-    // Make sure the layer exists before trying to set its property
     if (this.map.getLayer(layerId)) {
         this.map.setPaintProperty(layerId, 'raster-opacity', opacity);
     }
   }
-  // --- END: NEW FUNCTION ---
 
   async updateMapFilter() {
     const activeFilters = this.filterCollection.getActiveFilters();

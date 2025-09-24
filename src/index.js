@@ -29,21 +29,21 @@ const map = new maplibregl.Map({
         },
         layers: [
             // --- BASE & HISTORICAL LAYERS ---
-            { id: 'osm-background', type: 'raster', source: 'osm', layout: { 'visibility': 'visible' } },
+            { id: 'osm-background', type: 'raster', source: 'osm', layout: { 'visibility': 'visible' } }, // ON by default
             { id: 'satellite-background', type: 'raster', source: 'satellite', layout: { 'visibility': 'none' } },
             { id: "Plan Adriani (1934)", type: "raster", source: "plan-adriani", layout: { "visibility": "none" } },
             { id: "Plan Tkaczow (1993)", type: "raster", source: "plan-tkaczow", layout: { "visibility": "none" } },
             { id: "Plan Falaky (1866)",  type: "raster", source: "plan-falaky",  layout: { "visibility": "none" } },
             
-            // --- THE CRITICAL FIX IS HERE ---
-            // The 'source-layer' for pg_tileserv must match the schema and table name.
-            { id: 'parcelles_region-fill', type: 'fill', source: 'pgts_parcelles_region', 'source-layer': 'public.parcelles_region', paint: { 'fill-color': 'rgba(128, 0, 128, 0.4)', 'fill-outline-color': '#303030' } },
-            { id: 'espaces_publics-fill',  type: 'fill', source: 'pgts_espaces_publics',  'source-layer': 'public.espaces_publics',  paint: { 'fill-color': 'rgba(128, 0, 128, 0.92)', 'fill-outline-color': '#303030' } },
-            { id: 'emprises-fill',         type: 'fill', source: 'pgts_emprises',         'source-layer': 'public.emprises',         paint: { 'fill-color': 'rgba(255, 190, 190, 0.4)', 'fill-outline-color': '#303030' } },
-            { id: 'noms_rues-line',        type: 'line', source: 'pgts_noms_rues',        'source-layer': 'public.noms_rues',        paint: { 'line-color': 'rgba(100, 100, 100, 0.8)', 'line-width': 2 } },
-            { id: 'littoral-line',         type: 'line', source: 'pgts_littoral',         'source-layer': 'public.littoral',         paint: { 'line-color': 'rgba(0, 100, 200, 0.8)', 'line-width': 2 } },
+            // --- MODIFIED: Polygon & Line layers are now OFF by default ---
+            { id: 'parcelles_region-fill', type: 'fill', source: 'pgts_parcelles_region', 'source-layer': 'public.parcelles_region', layout: { 'visibility': 'none' }, paint: { 'fill-color': 'rgba(128, 0, 128, 0.4)', 'fill-outline-color': '#303030' } },
+            { id: 'espaces_publics-fill',  type: 'fill', source: 'pgts_espaces_publics',  'source-layer': 'public.espaces_publics',  layout: { 'visibility': 'none' }, paint: { 'fill-color': 'rgba(200, 200, 200, 0.4)', 'fill-outline-color': '#303030' } },
+            { id: 'emprises-fill',         type: 'fill', source: 'pgts_emprises',         'source-layer': 'public.emprises',         layout: { 'visibility': 'none' }, paint: { 'fill-color': 'rgba(255, 190, 190, 0.4)', 'fill-outline-color': '#303030' } },
+            { id: 'noms_rues-line',        type: 'line', source: 'pgts_noms_rues',        'source-layer': 'public.noms_rues',        layout: { 'visibility': 'none' }, paint: { 'line-color': 'rgba(100, 100, 100, 0.8)', 'line-width': 2 } },
+            { id: 'littoral-line',         type: 'line', source: 'pgts_littoral',         'source-layer': 'public.littoral',         layout: { 'visibility': 'none' }, paint: { 'line-color': 'rgba(0, 100, 200, 0.8)', 'line-width': 2 } },
             
             // --- POINT LAYER from TEGOLA ---
+            // This layer remains ON by default
             { id: 'sites_fouilles-points', type: 'circle', source: 'tegola_points', 'source-layer': 'sites_fouilles', paint: { 'circle-radius': 6, 'circle-color': 'rgba(0, 150, 255, 0.9)', 'circle-stroke-color': 'white', 'circle-stroke-width': 1.5 } }
         ]
     },

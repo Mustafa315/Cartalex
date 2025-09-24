@@ -1,18 +1,24 @@
 /* =====================
-   Cartalex Map CSS
+   Cartalex Map CSS - Final Version with Red Close Button
    ===================== */
+
    :root {
-    --primary-bg: #f0de6b;
-    --primary-border: #b8a186;
-    --primary-text: rgba(18, 97, 130, 0.9);
-    --accent: rgba(149, 116, 75, 0.9);
-    --white: #fff;
+    --panel-bg: transparent;
+    --button-bg: rgba(55, 90, 95, 0.9);
+    --text-light: #ffffff;
+    --text-dark: #2c3e50;
+    --border-color: rgba(204, 204, 204, 0.5);
+    --font-main: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --text-shadow-light: 1px 1px 2px rgba(0,0,0,0.7);
+    /* --- ADDED: Color variable for the close button --- */
+    --close-button-bg: rgba(220, 53, 69, 0.9); /* Light Red */
+    --close-button-hover-bg: rgba(187, 45, 59, 0.9); /* Darker Red */
   }
   
   html, body {
     margin: 0;
     height: 100%;
-    font-family: sans-serif;
+    font-family: var(--font-main);
   }
   
   #map {
@@ -22,11 +28,31 @@
     width: 100%;
   }
   
-  /* ========== Panels & Volets General ========== */
-  .onglets_haut, .onglets_gauche { cursor: pointer; user-select: none; }
-  .onglets_haut a, .onglets_gauche a { text-decoration: none; color: white; padding: 8px 12px; display: inline-block; }
+  /* =======================================
+     SHARED PANEL HANDLE STYLES
+     ======================================= */
+  .onglets_haut, .onglets_gauche {
+    position: absolute;
+    background: var(--button-bg);
+    border-radius: 4px;
+    cursor: pointer;
+    z-index: 11;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    transition: all 0.3s ease-in-out; 
+  }
+  .onglets_haut a, .onglets_gauche a {
+    text-decoration: none;
+    color: var(--text-light);
+    display: inline-block;
+    text-shadow: var(--text-shadow-light);
+    font-weight: bold;
+    padding: 8px 15px; 
+  }
   
-  /* ========== Top Panel (Filters) ========== */
+  
+  /* =======================================
+     Top Panel ("Filtres de requête")
+     ======================================= */
   #volet_haut_clos {
     position: fixed;
     top: 0;
@@ -41,24 +67,24 @@
     left: 0;
     width: 100%;
     transition: transform .3s ease-in-out;
-    background: var(--accent);
-    padding: 10px;
-    border-bottom: 2px solid var(--primary-border);
+    background: var(--panel-bg);
+    padding: 50px 15px 15px 15px; 
+    border-bottom: none;
+    box-shadow: none;
   }
-  #volet_haut.is-open { transform: translateY(0); }
-  .onglets_haut {
-    position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--accent);
-    border-radius: 0 0 8px 8px;
+  #volet_haut.is-open {
+    transform: translateY(0);
   }
-  .onglets_haut .fermer { display: none; }
-  #volet_haut.is-open ~ .onglets_haut .ouvrir { display: none; }
-  #volet_haut.is-open ~ .onglets_haut .fermer { display: inline-block; }
   
-  /* ========== Left Panel (Layers) ========== */
+  .onglets_haut {
+    top: 10px;
+    left: 50%; 
+    transform: translateX(-50%);
+  }
+  
+  /* ===================================
+     Left Panel ("Choix des couches")
+     =================================== */
   #volet_gauche_clos {
     position: fixed;
     left: 0;
@@ -72,76 +98,157 @@
     left: 0;
     top: 0;
     height: 100%;
-    width: 250px;
-    background: var(--accent);
+    width: 350px;
+    background: var(--panel-bg);
     transition: transform 0.3s ease-in-out;
     padding: 1rem;
-    border-right: 2px solid var(--primary-border);
+    border-right: none;
+    overflow-y: auto;
   }
-  #volet_gauche.is-open { transform: translateX(0); }
+  #volet_gauche.is-open {
+    transform: translateX(0);
+  }
+  
   .onglets_gauche {
-    position: absolute;
-    left: 100%;
+    left: 10px;
     top: 50%;
     transform: translateY(-50%);
-    background: var(--accent);
-    border-radius: 0 8px 8px 0;
-    writing-mode: vertical-lr;
-    text-orientation: mixed;
   }
-  .onglets_gauche .fermer { display: none; }
-  #volet_gauche.is-open ~ .onglets_gauche .ouvrir { display: none; }
-  #volet_gauche.is-open ~ .onglets_gauche .fermer { display: inline-block; }
+  .onglets_gauche a {
+    writing-mode: vertical-rl;
+  }
   
-  /* ========== Filter UI Styles ========== */
-  .filter-collection-content { display: flex; justify-content: center; width: 100%; }
-  .filter-content { margin: 0 1rem; width: 100%; max-width: 280px; }
+  #volet_gauche.is-open ~ .onglets_gauche {
+    left: 310px; 
+  }
+  
+  .onglets_gauche .fermer,
+  #volet_haut_clos .fermer { 
+    display: none;
+  }
+  
+  #volet_gauche.is-open ~ .onglets_gauche .ouvrir,
+  #volet_haut.is-open ~ .onglets_haut .ouvrir { 
+    display: none; 
+  }
+  
+  #volet_gauche.is-open ~ .onglets_gauche .fermer,
+  #volet_haut.is-open ~ .onglets_haut .fermer { 
+    display: inline-block; 
+  }
+  
+  
+  /* =======================================
+     FILTER & LAYER CONTENT STYLES
+     ======================================= */
+  
+  .filter-collection-content { display: flex; justify-content: center; width: 100%; gap: 20px; }
+  .filter-content { flex: 1; max-width: 320px; background-color: transparent; }
   .filter-name {
-      display: block; color: var(--white); border: none; padding: 0.5rem; width: 100%; cursor: pointer;
-      background-color: var(--primary-text); text-align: center; border-radius: 4px;
+    color: var(--text-light);
+    background-color: var(--button-bg);
+    font-size: 1.1rem;
+    font-weight: bold;
+    padding: 12px;
+    text-align: center;
+    border-radius: 4px;
+    margin: 0;
+    cursor: default;
+    text-shadow: var(--text-shadow-light);
   }
-  .subfilter-container { background-color: var(--white); padding: 10px; border: 1px solid var(--primary-border); margin-top: 5px; border-radius: 4px; }
-  .subfilter-title { cursor: pointer; padding: 8px; background-color: #f0f0f0; border: 1px solid #ccc; margin-top: 5px; border-radius: 4px; color: var(--primary-text); }
-  .subfilter-content { list-style-type: none; text-align: left; padding-left: 0; background-color: white; max-height: 150px; overflow-y: auto; }
-  .subfilter-content label { color: var(--primary-text); }
+  .subfilter-container { padding: 0; border: none; margin-top: 5px; background-color: transparent; }
+  .subfilter-title {
+    cursor: pointer;
+    padding: 10px;
+    background-color: var(--button-bg);
+    color: var(--text-light);
+    border: none;
+    margin-top: 5px;
+    border-radius: 3px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-shadow: var(--text-shadow-light);
+  }
+  .subfilter-title::after { content: '▶'; font-size: 0.7rem; transition: transform 0.2s; }
+  .subfilter-title.active::after { transform: rotate(90deg); }
+  .subfilter-content {
+    list-style-type: none;
+    padding: 10px;
+    background-color: rgba(255, 255, 255, 0.9);
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    display: none;
+    color: var(--text-dark);
+    border-radius: 4px;
+  }
+  .subfilter-content li { padding: 3px 0; }
+  .close-panel-button {
+    /* --- MODIFIED: Changed background color to red variable --- */
+    background: var(--close-button-bg);
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-top: 15px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  }
+  .close-panel-button:hover { 
+    /* --- MODIFIED: Added a darker red for the hover state --- */
+    background: var(--close-button-hover-bg); 
+  }
   
-  /* ========== Layer List UI Styles ========== */
-  .layerDragbox { list-style-type: none; padding: 0; }
-  .listitem { background: rgba(0,0,0,0.2); color: white; padding: 8px; margin-bottom: 5px; border-radius: 4px; text-transform: capitalize; }
-  /* ... (all previous styles remain the same) ... */
-
-/* ** START: NEW POPUP STYLES ** */
-.maplibregl-popup-content {
-  background: var(--primary-bg);
-  color: #333;
-  padding: 10px;
-  border-radius: 4px;
-  border: 1px solid var(--primary-border);
-  font-family: sans-serif;
-  max-width: 300px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
-}
-
-.site-popup h4 {
-  margin: 0 0 10px;
-  color: var(--primary-text);
-  border-bottom: 1px solid #ddd;
-  padding-bottom: 5px;
-}
-
-.site-popup strong {
-  color: var(--primary-text);
-  display: block;
-  margin-top: 10px;
-}
-
-.site-popup ul {
-  list-style-type: disc;
-  padding-left: 20px;
-  margin: 5px 0 0;
-}
-
-.site-popup li {
-  margin-bottom: 3px;
-}
-/* ** END: NEW POPUP STYLES ** */
+  /* Layer List Styling */
+  .layerDragbox {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    margin-top: 50px; 
+  }
+  .listitem {
+    background: var(--button-bg);
+    color: var(--text-light);
+    padding: 12px 15px;
+    margin-bottom: 2px;
+    border-radius: 4px;
+    text-transform: capitalize;
+    display: flex;
+    align-items: center;
+    font-size: 0.95rem;
+    text-shadow: var(--text-shadow-light);
+  }
+  .listitem:hover { background: #5a7e83; }
+  .listitem input[type="checkbox"] {
+    margin-right: 10px;
+    width: 16px;
+    height: 16px;
+  }
+  
+  /* ========================
+     Popup and Other Styles
+     ======================== */
+  .maplibregl-popup-content {
+    background: #fff;
+    color: var(--text-dark);
+    padding: 15px;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    font-family: var(--font-main);
+    max-width: 300px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  .site-popup h4 {
+    margin: 0 0 10px;
+    color: var(--button-bg);
+    border-bottom: 1px solid #eee;
+    padding-bottom: 8px;
+    font-size: 1.1rem;
+  }

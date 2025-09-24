@@ -29,8 +29,13 @@ export class Filter {
     }
 
     getActiveSubFilters(){
-        // A subfilter is active if it has at least one selected value.
-        return this.sub_filters.filter(sub_filter => sub_filter.getSelectedValues().length > 0);
+        // --- MODIFIED: Now recognizes enabled numeric filters as active ---
+        return this.sub_filters.filter(sub_filter => {
+            if (sub_filter.isNumeric) {
+                return sub_filter.isEnabled();
+            }
+            return sub_filter.getSelectedValues().length > 0;
+        });
     }
 
     getInfos(){
@@ -44,6 +49,7 @@ export class Filter {
             if (!subfilter.isNumeric){
                 requestApiUrl += `&${subfilter.name}=${subfilter.getSelectedValues().join('|')}`;
             } else {
+                // This logic correctly handles the floor/ceil values for date ranges
                 requestApiUrl += `&${subfilter.name}.floor=${subfilter.request_options.floor}|${subfilter.getFloor()}&${subfilter.name}.ceil=${subfilter.request_options.ceil}|${subfilter.getCeil()}`
             }
         }

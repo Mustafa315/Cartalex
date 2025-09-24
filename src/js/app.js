@@ -7,7 +7,6 @@ import { buildFilterUI, buildLayerList, attachAllEventListeners } from './ui.js'
 export class App {
   constructor(map) {
     this.map = map;
-    // This will hold the collection of filters for "sitesFouilles"
     this.filterCollection = null; 
     this.popup = null;
     this.historicalMapIds = [
@@ -31,12 +30,9 @@ export class App {
   }
 
   async initFilters() {
-    // We only initialize the filters for the 'sitesFouilles' layer
     const layerName = 'sitesFouilles';
     this.filterCollection = new FilterCollection(layerName, filters_config[layerName], server_config.api_at);
     await this.filterCollection.initFilters();
-    
-    // We pass the specific filters object to the UI builder
     buildFilterUI(this.filterCollection.getFilters());
   }
 
@@ -46,7 +42,6 @@ export class App {
   }
   
   initEventListeners() {
-    // We pass the specific filters object to the event listener function
     attachAllEventListeners(
       this.filterCollection.getFilters(),
       async () => { await this.updateMapFilter(); },
@@ -96,8 +91,14 @@ export class App {
   }
 
   setLayerOpacity(layerId, opacity) {
-    if (this.map.getLayer(layerId)) {
-        this.map.setPaintProperty(layerId, 'raster-opacity', opacity);
+    const layer = this.map.getLayer(layerId);
+    if (!layer) return;
+
+    // --- MODIFIED: Handle opacity for different layer types ---
+    if (layer.type === 'raster') {
+      this.map.setPaintProperty(layerId, 'raster-opacity', opacity);
+    } else if (layer.type === 'fill') {
+      this.map.setPaintProperty(layerId, 'fill-opacity', opacity);
     }
   }
 

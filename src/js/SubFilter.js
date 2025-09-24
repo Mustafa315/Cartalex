@@ -9,6 +9,13 @@ export class SubFilter {
         this.values = [];
         this.request_options ? this.initRequestOptions(): null;
         this.options ? this.initOptions(): null;
+
+        // --- ADDED: Properties for numeric/date filters ---
+        if (this.isNumeric) {
+            this.enabled = false;
+            this.floor = '';
+            this.ceil = '';
+        }
     }
 
     initRequestOptions(){
@@ -24,20 +31,14 @@ export class SubFilter {
         let values;
         if(!this.isNumeric){
             values =  await getValuesFromSubFilter(this);
-            console.log("Received values : ", values);
-            // --- ADDED: Check if the response is a valid array ---
+            console.log(`Received values for ${this.name}:`, values);
+            
             if (!Array.isArray(values)) {
-                console.warn(`Expected an array for ${this.name}, but received:`, values);
-                values = []; // Default to an empty array to prevent crashing
+                console.warn(`Expected an array for ${this.name}, but received an error. Defaulting to empty.`);
+                values = [];
             }
-            // --- END CORRECTION ---
         } else {
-            values = [
-                {
-                    ceil: null,
-                    floor: null
-                }
-            ]
+            values = [{ ceil: null, floor: null }];
         }
         this.setValues(values);
         this.unCheckAll();
@@ -72,24 +73,33 @@ export class SubFilter {
 
     checkValue(content){
         let seekField = this.alias ? this.alias : this.name;
-        console.log("Seek field : ", seekField);
         try {
-            this.values.filter(value => value[seekField] == content)[0].checked = true;
+            const valueToUpdate = this.values.find(value => value[seekField] == content);
+            if (valueToUpdate) valueToUpdate.checked = true;
         } catch (error) {
-            console.log(`Erreur : ${content}`, error)
+            console.log(`Error checking value: ${content}`, error)
         }
     }
 
     unCheckValue(content){
         let seekField = this.alias ? this.alias : this.name;
-        console.log("Seek field : ", seekField);
         try {
-            this.values.filter(value => value[seekField] == content)[0].checked = false;
+            const valueToUpdate = this.values.find(value => value[seekField] == content);
+            if (valueToUpdate) valueToUpdate.checked = false;
         } catch (error) {
-            console.log(`Erreur : ${content}`, error)
+            console.log(`Error unchecking value: ${content}`, error)
         }
     }
 
+    // --- ADDED: Methods to manage numeric filter state ---
+    setEnabled(enabled) {
+        if (this.isNumeric) {
+            this.enabled = enabled;
+        }
+    }
+    isEnabled() {
+        return this.isNumeric && this.enabled;
+    }
     setCeil(ceil){
         this.ceil = ceil;
     }
@@ -104,10 +114,9 @@ export class SubFilter {
     }
 
     getSelectedValues(){
-        if(this.alias){
-            return this.values.filter(value => value.checked == true).map(value => value[this.alias]);
-        }else {
-            return this.values.filter(value => value.checked == true).map(value => value[this.name]);
-        }
+        const seekField = this.alias || this.name;
+        return this.values
+            .filter(value => value.checked)
+            .map(value => value[seekField]);
     }
 }

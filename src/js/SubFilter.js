@@ -10,11 +10,11 @@ export class SubFilter {
         this.request_options ? this.initRequestOptions(): null;
         this.options ? this.initOptions(): null;
 
-        // --- ADDED: Properties for numeric/date filters ---
+        // ✅ دعم للفلاتر الرقمية (numeric/date)
         if (this.isNumeric) {
-            this.enabled = false;
-            this.floor = '';
-            this.ceil = '';
+            this.enabled = false;   // علشان نعرف هل مفعّل ولا لأ
+            this.floor = '';        // القيمة الدنيا
+            this.ceil = '';         // القيمة العليا
         }
     }
 
@@ -30,14 +30,16 @@ export class SubFilter {
     async initValues(){
         let values;
         if(!this.isNumeric){
-            values =  await getValuesFromSubFilter(this);
+            values = await getValuesFromSubFilter(this);
             console.log(`Received values for ${this.name}:`, values);
-            
+
+            // ✅ معالجة الأخطاء: لو الـ API رجع حاجة غير Array
             if (!Array.isArray(values)) {
-                console.warn(`Expected an array for ${this.name}, but received an error. Defaulting to empty.`);
-                values = [];
+                console.warn(`Expected an array for ${this.name}, but received:`, values);
+                values = []; // fallback
             }
         } else {
+            // ✅ default structure للفلاتر الرقمية
             values = [{ ceil: null, floor: null }];
         }
         this.setValues(values);
@@ -48,7 +50,7 @@ export class SubFilter {
         this.values.push({
             value: value,
             checked: false
-        })
+        });
     }
 
     setValues(values){
@@ -75,9 +77,11 @@ export class SubFilter {
         let seekField = this.alias ? this.alias : this.name;
         try {
             const valueToUpdate = this.values.find(value => value[seekField] == content);
-            if (valueToUpdate) valueToUpdate.checked = true;
+            if (valueToUpdate) {
+                valueToUpdate.checked = true;
+            }
         } catch (error) {
-            console.log(`Error checking value: ${content}`, error)
+            console.log(`Error checking value: ${content}`, error);
         }
     }
 
@@ -85,30 +89,37 @@ export class SubFilter {
         let seekField = this.alias ? this.alias : this.name;
         try {
             const valueToUpdate = this.values.find(value => value[seekField] == content);
-            if (valueToUpdate) valueToUpdate.checked = false;
+            if (valueToUpdate) {
+                valueToUpdate.checked = false;
+            }
         } catch (error) {
-            console.log(`Error unchecking value: ${content}`, error)
+            console.log(`Error unchecking value: ${content}`, error);
         }
     }
 
-    // --- ADDED: Methods to manage numeric filter state ---
+    // ✅ إدارة حالة الفلاتر الرقمية
     setEnabled(enabled) {
         if (this.isNumeric) {
             this.enabled = enabled;
         }
     }
+
     isEnabled() {
         return this.isNumeric && this.enabled;
     }
+
     setCeil(ceil){
         this.ceil = ceil;
     }
+
     getCeil(){
         return this.ceil;   
     }
+
     setFloor(floor){
         this.floor = floor;
     }
+
     getFloor(){
         return this.floor;
     }

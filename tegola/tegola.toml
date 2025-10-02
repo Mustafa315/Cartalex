@@ -18,6 +18,7 @@ uri = "postgres://postgres:postgres@db:5432/cartalex_basileia_3857"
   geometry_fieldname = "geom"
   id_fieldname = "fid"
   srid = 3857
+  
   # NOTE: Points do not need a buffer or simplification settings.
 
 [[maps]]

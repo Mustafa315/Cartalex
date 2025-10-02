@@ -57,21 +57,21 @@ export function buildLayerList(layers, map, historicalMapIds = []) {
     if (!container) return;
 
     const layerNameMap = {
-        'osm-background': 'OSM Background',
-        'satellite-background': 'Satellite Background',
-        // --- ADDED: A user-friendly name for the Cadastre Alexandrin layer ---
+        'osm-background': 'OpenStreetMap - Humanitarian',
+        'satellite-background': 'Google Earth',
         'parcelles_region-fill': 'Cadastre Alexandrin (Survey of Egypt, 1933-1948 / CEAlex)',
-        'espaces_publics-fill': 'Espaces publics',
-        'emprises-fill': 'Emprises des sites de fouilles',
-        'noms_rues-line': 'Noms de rues',
-        'littoral-line': 'Littoral',
-        'sites_fouilles-points': 'Sites de fouilles (points)'
+        'espaces_publics-fill': "Espaces publics d'Alexandrie (CEAlex)",
+        'emprises-fill': 'Emprises des sites de fouilles (CEAlex)',
+        'noms_rues-labels': 'Noms de rues (CEAlex)',
+        'littoral-line': 'Littoral (CEAlex)',
+        'sites_fouilles-points': 'Découvertes archéologiques, quartier des Palais Royaux (CEAlex)'
     };
 
     let html = '';
     layers.forEach(layer => {
         let layerName = layerNameMap[layer.id] || layer.id.replace(/-/g, ' ');
 
+        // --- THE FIX: Correctly check the initial visibility state from the map ---
         const isVisible = map.getLayoutProperty(layer.id, 'visibility') !== 'none';
         const checkedAttribute = isVisible ? 'checked' : '';
 
@@ -80,7 +80,6 @@ export function buildLayerList(layers, map, historicalMapIds = []) {
                 <input type="checkbox" id="layer-${layer.id}" data-layer-id="${layer.id}" ${checkedAttribute}>
                 <label for="layer-${layer.id}">${layerName}</label>`;
         
-        // --- MODIFIED: Add a condition to include a slider for the parcelles_region-fill layer ---
         if (historicalMapIds.includes(layer.id) || layer.id === 'parcelles_region-fill') {
             html += `
                 <div class="slider-container" style="display: ${isVisible ? 'block' : 'none'};">

@@ -7,12 +7,63 @@ const router = express.Router();
 router.get('/', (req, res) => res.render('index.html'));
 router.get('/carte', (req, res) => res.render('map.html'));
 
+// ### START: CORRECTED SECTION ###
+// This endpoint now correctly fetches all data needed for the detailed popup.
+router.get('/sitesFouilles/:fid/details', async (req, res, next) => {
+    const { fid } = req.params;
+    try {
+        const details = await db.oneOrNone(`
+            SELECT 
+                sf.id, sf.num_tkaczow, sf.commentaire,
+                p.nom AS inventeur, d.date_decouverte
+            FROM sites_fouilles AS sf
+            LEFT JOIN decouvertes AS d ON sf.id = d.id_site
+            LEFT JOIN personnes AS p ON d.id_inventeur = p.id
+            WHERE sf.fid = $1 LIMIT 1;
+        `, [fid]);
+
+        if (!details) {
+            return res.status(404).json({ error: 'Site not found' });
+        }
+
+        const vestiges = await db.any(`
+            SELECT c.caracterisation, p.periode FROM vestiges v
+            JOIN caracterisations c ON v.id_caracterisation = c.id
+            LEFT JOIN datations d ON v.id = d.id_vestige
+            LEFT JOIN periodes p ON d.id_periode = p.id
+            WHERE v.id_site = $1;
+        `, [details.id]);
+
+        // THIS QUERY IS NOW CORRECTED
+        const bibliographies = await db.any(`
+            SELECT 
+                b.nom_document, 
+                p.nom AS auteur, 
+                b.date_publication AS annee, -- Corrected column name b.annee -> b.date_publication
+                rb.pages
+            FROM bibliographies b
+            JOIN "references_biblio" rb ON b.id = rb.id_biblio
+            JOIN decouvertes d ON rb.id_decouverte = d.id
+            LEFT JOIN personnes p ON b.id_auteur1 = p.id
+            WHERE d.id_site = $1;
+        `, [details.id]);
+        
+        res.json({
+            details: details,
+            vestiges: vestiges,
+            bibliographies: bibliographies
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+// ### END: CORRECTED SECTION ###
+
+// --- Your other routes, unchanged ---
+
 router.get('/getValues/:tableName', cacheMiddleware, addOrderAliasOnSelectDistinct, async (req, res, next) => {
     const { tableName } = req.params;
     let dbquery = res.locals.selectQuery;
-    
-    // --- CORRECTED SWITCH STATEMENT ---
-    // This now correctly handles the 'parcellesRegion' table name sent from the frontend.
     switch (tableName) {
         case 'vestiges': 
             dbquery += ' FROM vestiges JOIN datations ON vestiges.id = datations.id_vestige JOIN caracterisations ON vestiges.id_caracterisation = caracterisations.id JOIN periodes ON datations.id_periode = periodes.id'; 
@@ -26,15 +77,12 @@ router.get('/getValues/:tableName', cacheMiddleware, addOrderAliasOnSelectDistin
         case 'decouvertes': 
             dbquery += ' FROM decouvertes JOIN personnes ON decouvertes.id_inventeur = personnes.id'; 
             break;
-        case 'parcellesRegion': // Correctly handles the camelCase name from the filter config
+        case 'parcellesRegion':
             dbquery += ` FROM public.parcelles_region`; 
             break;
         default: 
-            // This was the source of the error. Now it will only be hit if the table is truly unknown.
             return res.status(404).json({ error: 'Table not found' });
     }
-    // --- END CORRECTION ---
-
     dbquery += res.locals.orderQuery;
     try {
         const values = await db.any(dbquery);
@@ -101,11 +149,9 @@ router.get('/parcellesRegion/general', async (req, res, next) => {
         const numeros = req.query.numero.split('|').map(val => `'${val.replace(/'/g, "''")}'`).join(',');
         conditions.push(`numero IN (${numeros})`);
     }
-
     if (conditions.length > 0) {
         whereClause = ' WHERE ' + conditions.join(' AND ');
     }
-
     const dbquery = `SELECT fid as id FROM parcelles_region${whereClause}`;
     try {
         const values = await db.any(dbquery);
@@ -115,35 +161,5 @@ router.get('/parcellesRegion/general', async (req, res, next) => {
     }
 });
 
-router.get('/sitesFouilles/:fid/details', async (req, res, next) => {
-    const { fid } = req.params;
-    try {
-        const site = await db.oneOrNone('SELECT id, num_tkaczow, commentaire FROM sites_fouilles WHERE fid = $1', [fid]);
-        if (!site) {
-            return res.status(404).json({ error: 'Site not found' });
-        }
-        const vestiges = await db.any(`
-            SELECT c.caracterisation, p.periode FROM vestiges v
-            JOIN caracterisations c ON v.id_caracterisation = c.id
-            LEFT JOIN datations d ON v.id = d.id_vestige
-            LEFT JOIN periodes p ON d.id_periode = p.id
-            WHERE v.id_site = $1
-        `, [site.id]);
-        const bibliographies = await db.any(`
-            SELECT DISTINCT b.nom_document FROM bibliographies b
-            JOIN "references_biblio" rb ON b.id = rb.id_biblio
-            JOIN decouvertes d ON rb.id_decouverte = d.id
-            WHERE d.id_site = $1
-        `, [site.id]);
-        
-        res.json({
-            details: site,
-            vestiges: vestiges,
-            bibliographies: bibliographies
-        });
-    } catch (error) {
-        next(error);
-    }
-});
-
 export default router;
+

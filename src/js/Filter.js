@@ -1,4 +1,5 @@
 import { SubFilter } from "./SubFilter";
+
 export class Filter {
     constructor(filter_config){
         this.active = false;
@@ -29,7 +30,7 @@ export class Filter {
     }
 
     getActiveSubFilters(){
-        // --- MODIFIED: Now recognizes enabled numeric filters as active ---
+        // ✅ دمج: subfilter active لو عنده values OR numeric filter enabled
         return this.sub_filters.filter(sub_filter => {
             if (sub_filter.isNumeric) {
                 return sub_filter.isEnabled();
@@ -45,14 +46,16 @@ export class Filter {
     async getSelectedFeatures(api_at, layer_name){
         let selected_features = [];
         let requestApiUrl = api_at + `/${layer_name}/${this.name}?`;
+
         for (let subfilter of this.getActiveSubFilters()){
             if (!subfilter.isNumeric){
                 requestApiUrl += `&${subfilter.name}=${subfilter.getSelectedValues().join('|')}`;
             } else {
-                // This logic correctly handles the floor/ceil values for date ranges
-                requestApiUrl += `&${subfilter.name}.floor=${subfilter.request_options.floor}|${subfilter.getFloor()}&${subfilter.name}.ceil=${subfilter.request_options.ceil}|${subfilter.getCeil()}`
+                // ✅ دمج: دعم floor/ceil date ranges بشكل سليم
+                requestApiUrl += `&${subfilter.name}.floor=${subfilter.request_options.floor}|${subfilter.getFloor()}&${subfilter.name}.ceil=${subfilter.request_options.ceil}|${subfilter.getCeil()}`;
             }
         }
+
         console.log("Selection request to send:", requestApiUrl);
         let request_result = await fetch(requestApiUrl);
         let json_result = await request_result.json();

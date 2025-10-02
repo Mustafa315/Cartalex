@@ -7,6 +7,9 @@
 docker run --rm -p 3000:3000 --name cartalex_app cartalex-app
 2- docker compose up -d tegola
 
+## Database access command
+
+docker exec -it cartalex_db psql -U postgres -d cartalex_basileia_3857
 
 ## Overview
 

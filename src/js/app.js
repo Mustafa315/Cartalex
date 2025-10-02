@@ -10,9 +10,9 @@ export class App {
     this.filterCollection = null; 
     this.popup = null;
     this.historicalMapIds = [
-      "Plan Adriani (1934)",
-      "Plan Tkaczow (1993)",
-      "Plan Falaky (1866)"
+      "Plan d'Adriani, 1934",
+      "Plan de Tkaczow, 1993",
+      "Restitution de Mahmoud bey el-Falaki, 1866" 
     ];
   }
 
@@ -66,23 +66,50 @@ export class App {
   }
 
   async showPopupForSite(fid, coordinates) {
-    const response = await fetch(`${server_config.api_at}/sitesFouilles/${fid}/details`);
-    if (!response.ok) { console.error("Failed to fetch site details"); return; }
-    const data = await response.json();
-    let html = `<div class="site-popup"><h4>Num Tkaczow: ${data.details.num_tkaczow}</h4>`;
-    if (data.details.commentaire) { html += `<p>${data.details.commentaire}</p>`; }
-    if (data.vestiges.length > 0) {
-      html += `<strong>Vestiges:</strong><ul>`;
-      data.vestiges.forEach(v => { html += `<li>${v.caracterisation} (${v.periode || 'N/A'})</li>`; });
-      html += `</ul>`;
+    try {
+        const response = await fetch(`${server_config.api_at}/sitesFouilles/${fid}/details`);
+        if (!response.ok) {
+            throw new Error(`API request failed for fid: ${fid}`);
+        }
+        const data = await response.json();
+
+        // 1. Build the main title string like the online site
+        const discoverer = data.details.inventeur || '';
+        const discoveryDate = data.details.date_decouverte || '';
+        const title = `<b>Fouilles ${discoverer} (${discoveryDate})</b><br>Num Tkaczow: ${data.details.num_tkaczow}`;
+        
+        let html = `<div class="site-popup"><h4>${title}</h4>`;
+
+        // 2. Build the Vestiges list with simplified formatting
+        if (data.vestiges && data.vestiges.length > 0) {
+            html += `<strong>Vestiges:</strong><ul>`;
+            data.vestiges.forEach(v => {
+                const period = v.periode ? v.periode.split(' (')[0] : 'N/A';
+                html += `<li>${v.caracterisation} (${period})</li>`;
+            });
+            html += `</ul>`;
+        }
+
+        // 3. Build the full, formatted bibliography citation
+        if (data.bibliographies && data.bibliographies.length > 0) {
+            html += `<strong>Bibliographie sélective:</strong><ul>`;
+            data.bibliographies.forEach(b => {
+                const author = b.auteur || '';
+                const docTitle = b.nom_document ? `“${b.nom_document}”` : '';
+                const year = b.annee || '';
+                const page = b.pages || '0';
+                html += `<li>${author}, ${docTitle}, ${year}, ${page}.</li>`;
+            });
+            html += `</ul>`;
+        }
+
+        html += `</div>`;
+        
+        this.popup = new maplibregl.Popup().setLngLat(coordinates).setHTML(html).addTo(this.map);
+
+    } catch (error) {
+        console.error("Error creating popup:", error);
     }
-    if (data.bibliographies.length > 0) {
-      html += `<strong>Bibliographie:</strong><ul>`;
-      data.bibliographies.forEach(b => { html += `<li>${b.nom_document}</li>`; });
-      html += `</ul>`;
-    }
-    html += `</div>`;
-    this.popup = new maplibregl.Popup().setLngLat(coordinates).setHTML(html).addTo(this.map);
   }
 
   toggleLayerVisibility(layerId, isVisible) {
@@ -92,13 +119,16 @@ export class App {
 
   setLayerOpacity(layerId, opacity) {
     const layer = this.map.getLayer(layerId);
-    if (!layer) return;
-
-    // --- MODIFIED: Handle opacity for different layer types ---
+    if (!layer) {
+      console.warn(`Attempted to set opacity on a non-existent layer: ${layerId}`);
+      return;
+    }
     if (layer.type === 'raster') {
       this.map.setPaintProperty(layerId, 'raster-opacity', opacity);
     } else if (layer.type === 'fill') {
       this.map.setPaintProperty(layerId, 'fill-opacity', opacity);
+    } else {
+      console.warn(`Layer type "${layer.type}" does not support opacity control.`);
     }
   }
 

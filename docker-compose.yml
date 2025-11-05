@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   db:
     image: postgis/postgis:13-3.1
@@ -40,8 +42,7 @@ services:
       - "7800:7800"
     environment:
       - DATABASE_URL=postgres://postgres:postgres@db:5432/cartalex_basileia_3857
-      # --- ADD THIS LINE TO FIX CORS FOR POLYGONS ---
-      - CORS_ORIGIN=*
+      - CORS_ORIGIN=*   # CORS fix
     depends_on:
       db:
         condition: service_healthy
@@ -59,10 +60,15 @@ services:
       - DB_PORT=5432
       - DB_NAME=cartalex_basileia_3857
       - CORS_ORIGIN=http://localhost:3000
+    volumes:
+      - ./public:/usr/src/app/public  
     depends_on:
-      - db
-      - tegola
-      - pgtileserv
+      db:
+        condition: service_healthy
+      tegola:
+        condition: service_started
+      pgtileserv:
+        condition: service_started
     restart: unless-stopped
 
 volumes:

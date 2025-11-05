@@ -1,4 +1,4 @@
-name: Docker Compose CI Pipeline
+name: Docker Compose Build & Run
 
 on:
   push:
@@ -6,38 +6,42 @@ on:
       - main
 
 jobs:
-  build-and-run:
-    name: Build and Run Docker Compose
+  run-docker-app:
+    name: Build and Run App using Docker Compose
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       # Step 1: Checkout your code
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Step 2: Set up Docker Buildx (improves Docker build performance)
+      # Step 2: Set up Docker Buildx
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # Step 3: Login to Docker Hub (اختياري لو عندك حساب Docker)
-      # - name: Login to Docker Hub
-      #   uses: docker/login-action@v3
-      #   with:
-      #     username: ${{ secrets.DOCKER_USERNAME }}
-      #     password: ${{ secrets.DOCKER_PASSWORD }}
-
-      # Step 4: Build Docker Compose services
+      # Step 3: Build services from docker-compose.yml
       - name: Build Docker Compose services
         run: docker compose -f docker-compose.yml build
 
-      # Step 5: Run Docker Compose services
-      - name: Run Docker Compose
+      # Step 4: Run all services in detached mode
+      - name: Start application containers
         run: docker compose -f docker-compose.yml up -d
+
+      # Step 5: Wait for app to start (اختياري)
+      - name: Wait for services to initialize
+        run: sleep 10
 
       # Step 6: Show running containers
       - name: List running containers
         run: docker ps -a
 
-      # Step 7: Stop and clean up (optional)
-      - name: Stop containers
-        run: docker compose -f docker-compose.yml down
+      # Step 7: Show application logs (useful for debugging)
+      - name: Show app logs
+        run: docker compose logs --tail=50
+
+      # Step 8: Keep app running until the workflow finishes (for testing)
+      - name: Keep app running
+        run: |
+          echo "App is running... press Ctrl+C to stop locally."
+          sleep 30

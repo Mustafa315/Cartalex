@@ -1,26 +1,43 @@
-name: Build and Run Docker Compose
+name: Docker Compose CI Pipeline
 
 on:
   push:
     branches:
-      - main 
+      - main
 
 jobs:
-  docker:
+  build-and-run:
+    name: Build and Run Docker Compose
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      # Step 1: Checkout your code
+      - name: Checkout code
         uses: actions/checkout@v4
 
+      # Step 2: Set up Docker Buildx (improves Docker build performance)
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      # Step 3: Login to Docker Hub (اختياري لو عندك حساب Docker)
+      # - name: Login to Docker Hub
+      #   uses: docker/login-action@v3
+      #   with:
+      #     username: ${{ secrets.DOCKER_USERNAME }}
+      #     password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # Step 4: Build Docker Compose services
       - name: Build Docker Compose services
         run: docker compose -f docker-compose.yml build
 
-      - name: Run Docker Compose services
+      # Step 5: Run Docker Compose services
+      - name: Run Docker Compose
         run: docker compose -f docker-compose.yml up -d
 
-      - name: Show running containers
+      # Step 6: Show running containers
+      - name: List running containers
         run: docker ps -a
+
+      # Step 7: Stop and clean up (optional)
+      - name: Stop containers
+        run: docker compose -f docker-compose.yml down

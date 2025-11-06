@@ -1,36 +1,24 @@
-name: 🚀 Deploy Cartalex App to Server
+stages:
+  - deploy
 
-on:
-  push:
-    branches:
-      - main
+deploy_job:
+  stage: deploy
+  tags:
+    - docker
+  script: |
+    set -euxo pipefail
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
+    echo "📂 Moving to project directory..."
+    cd /home/cartalex-final/Cartalex
 
-    steps:
-      - name: 🧰 Checkout repository
-        uses: actions/checkout@v4
+    echo "🔄 Fetching latest code from main branch..."
+    git fetch origin main
+    git reset --hard origin/main
 
-      - name: 🔐 Connect to Cartalex server & deploy
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: 85.234.139.116
-          username: root
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            echo "📂 Moving to project folder..."
-            cd /home/cartalex-final/Cartlex
+    echo "🛑 Stopping existing containers..."
+    docker compose down
 
-            echo "🔄 Updating code..."
-            git fetch origin main
-            git reset --hard origin/main
+    echo "🏗️ Rebuilding and starting containers..."
+    docker compose up -d --build
 
-            echo "🛑 Stopping old containers..."
-            docker compose down
-
-            echo "🏗️ Rebuilding and starting containers..."
-            docker compose up -d --build
-
-            echo "✅ Deployment complete!"
+    echo "✅ Deployment completed successfully!"

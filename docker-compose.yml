@@ -5,7 +5,7 @@ services:
     image: postgis/postgis:13-3.1
     container_name: cartalex_db
     ports:
-      - "5432:5432"
+      - "127.0.0.15432:5432"
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
@@ -59,7 +59,7 @@ services:
       - DB_PASSWORD=postgres
       - DB_PORT=5432
       - DB_NAME=cartalex_basileia_3857
-      - CORS_ORIGIN=http://localhost:3000
+      - CORS_ORIGIN=http://85.234.139.116:3000
     volumes:
       - ./public:/usr/src/app/public  
     depends_on:
@@ -75,4 +75,4 @@ volumes:
   pgdata:
   # Test GitHub Actions
 #a new test
-#test5
+#test6

@@ -7,7 +7,7 @@ import { DistanceMeasure } from './DistanceMeasure.js';
 
 // Define colors here
 const defaultPointColor = 'rgb(155, 0, 245)'; // Your original color
-const highlightPointColor = 'rgb(15, 150, 36)';      // Example highlight color (Yellow)
+const highlightPointColor = 'rgb(15, 150, 36)'; // Example highlight color (Yellow)
 
 export class App {
     constructor(map) {
@@ -34,7 +34,7 @@ export class App {
             this.initLayerList();
             this.initEventListeners();
             this.initMapClickListener();
-            this.initDeepLinkHandlers();
+            this.initDeepLinkHandlers(); // <-- This is now modified
             this.initHoverEffect();
             this.initDistanceMeasure();
             // Apply default style initially
@@ -118,7 +118,7 @@ export class App {
                 };
                 this.map.on('moveend', onMoveEnd);
                 // Update URL with the correct fid (feature.id)
-                this.updateUrlForPoint(fid);
+                this.updateUrlForPoint(fid); // <-- This function is now modified
             } else {
                 const lng = e.lngLat.lng.toFixed(6);
                 const lat = e.lngLat.lat.toFixed(6);
@@ -131,33 +131,37 @@ export class App {
         this.map.on('mouseleave', 'sites_fouilles-points', () => { this.map.getCanvas().style.cursor = ''; });
     }
 
+    // --- START: MODIFIED FUNCTION FOR CLEAN URLS ---
     initDeepLinkHandlers() {
-        const params = new URLSearchParams(window.location.search);
-        const pointParam = params.get('point');
-        if (pointParam) {
-             // --- IMPORTANT CHANGE: Handle fid as potentially string or number ---
-            const fid = pointParam; // Keep as string initially
-            this.focusPointByFid(fid); // Pass string fid
+        // Check for /carte/30 style URL on initial load
+        const pathMatch = window.location.pathname.match(/\/carte\/(\d+)/);
+        if (pathMatch && pathMatch[1]) {
+            const fid = pathMatch[1]; // Get FID from path
+            this.focusPointByFid(fid);
         }
+
+        // Handle browser back/forward buttons
         window.addEventListener('popstate', () => {
-            const sp = new URLSearchParams(window.location.search);
-            const p = sp.get('point');
-            if (p) {
-                 // --- IMPORTANT CHANGE: Handle fid as potentially string or number ---
-                const fidPop = p; // Keep as string
-                this.focusPointByFid(fidPop); // Pass string fid
+            const popPathMatch = window.location.pathname.match(/\/carte\/(\d+)/);
+            if (popPathMatch && popPathMatch[1]) {
+                const fidPop = popPathMatch[1];
+                this.focusPointByFid(fidPop); // Focus point from path
             } else {
+                // If the path is just /carte, close any open popup
                 if (this.popup) { this.popup.remove(); this.popup = null; }
             }
         });
     }
+    // --- END: MODIFIED FUNCTION ---
 
+    // --- START: MODIFIED FUNCTION FOR CLEAN URLS ---
     updateUrlForPoint(fid) {
-        const url = new URL(window.location.href);
-         // --- IMPORTANT CHANGE: Ensure fid is stored as a string in URL ---
-        url.searchParams.set('point', String(fid));
+        // Create a new URL using the path format, e.g., /carte/30
+        const url = new URL(`${window.location.origin}/carte/${fid}`);
+        // Use pushState to update the URL without reloading
         window.history.pushState({}, '', url);
     }
+    // --- END: MODIFIED FUNCTION ---
 
     flyToCoordinates(coordinates, { zoom = 18, duration = 2000 } = {}) {
         this.map.flyTo({
@@ -192,7 +196,7 @@ export class App {
             const features = this.map.querySourceFeatures('tegola_points', { sourceLayer: 'sites_fouilles' }) || [];
             for (const f of features) {
                 // --- IMPORTANT CHANGE: Compare feature.id (can be string/number) with targetFid ---
-                 if (String(f.id) === String(targetFid)) { // Compare as strings
+                if (String(f.id) === String(targetFid)) { // Compare as strings
                     const c = f.geometry.coordinates;
                     return Array.isArray(c) ? c.slice() : null;
                 }
@@ -210,14 +214,14 @@ export class App {
             found = tryFind();
             if (found) { return found; }
         }
-         console.warn(`Coordinates not found after multiple attempts for fid: ${targetFid}`);
+        console.warn(`Coordinates not found after multiple attempts for fid: ${targetFid}`);
         return null;
     }
 
     initHoverEffect() {
         this.map.on('mousemove', 'sites_fouilles-points', (e) => {
             if (e.features.length > 0) {
-                 // --- IMPORTANT CHANGE: Use feature.id ---
+                // --- IMPORTANT CHANGE: Use feature.id ---
                 const currentFid = e.features[0].id;
                 if (this.hoveredFid !== currentFid) {
                     if (this.hoveredFid !== null) {
@@ -252,7 +256,7 @@ export class App {
         let frame = 0;
         const animate = (timestamp) => {
             if (this.hoveredFid !== null) {
-                 // --- IMPORTANT CHANGE: Filter using feature.id ---
+                // --- IMPORTANT CHANGE: Filter using feature.id ---
                 const filter = ['==', ['id'], this.hoveredFid];
                 this.map.setFilter('sites_fouilles-pulse', filter);
                 this.map.setFilter('sites_fouilles-waves', filter);
@@ -264,7 +268,7 @@ export class App {
                 this.map.setPaintProperty('sites_fouilles-waves', 'circle-opacity', waveOpacity > 0 ? waveOpacity : 0);
                 frame += 0.3;
             } else {
-                 // --- IMPORTANT CHANGE: Use correct null filter ---
+                // --- IMPORTANT CHANGE: Use correct null filter ---
                 const nullFilter = ['==', ['id'], '']; // Keep this way to effectively hide
                 this.map.setFilter('sites_fouilles-pulse', nullFilter);
                 this.map.setFilter('sites_fouilles-waves', nullFilter);
@@ -280,7 +284,7 @@ export class App {
             // Fetch using the fid (which is feature.id, potentially string or number)
             const response = await fetch(`${server_config.api_at}/sitesFouilles/${fid}/details`);
             if (!response.ok) {
-                 console.error(`API Error for fid ${fid}: ${response.status} ${response.statusText}`);
+                console.error(`API Error for fid ${fid}: ${response.status} ${response.statusText}`);
                 const errorText = await response.text();
                 console.error("Error details:", errorText);
                 throw new Error(`API request failed for fid: ${fid}`);
@@ -318,10 +322,10 @@ export class App {
                 html += `</ul>`;
             }
 
-             // Add comment if available
-             if (details.commentaire) {
-                 html += `<p><strong>Commentaire:</strong> ${details.commentaire}</p>`;
-             }
+            // Add comment if available
+            if (details.commentaire) {
+                html += `<p><strong>Commentaire:</strong> ${details.commentaire}</p>`;
+            }
 
             html += `</div>`;
             if (this.popup) { this.popup.remove(); } // Ensure only one popup
@@ -333,10 +337,10 @@ export class App {
             console.error("Error creating popup for fid:", fid, error);
             // Optionally show a generic error message in the popup
             if (this.popup) { this.popup.remove(); }
-             this.popup = new maplibregl.Popup()
-                 .setLngLat(coordinates)
-                 .setHTML(`<div class="site-popup"><h4>Error</h4><p>Could not load details for site ${fid}.</p></div>`)
-                 .addTo(this.map);
+            this.popup = new maplibregl.Popup()
+                .setLngLat(coordinates)
+                .setHTML(`<div class="site-popup"><h4>Error</h4><p>Could not load details for site ${fid}.</p></div>`)
+                .addTo(this.map);
         }
     }
 
@@ -371,7 +375,22 @@ export class App {
     injectToastStyles() {
         const style = document.createElement('style');
         style.innerHTML = `
-            .copy-toast { /* ... styles ... */ }
+            .copy-toast {
+                position: fixed;
+                top: 20px; /* Start slightly higher */
+                left: 50%;
+                transform: translateX(-50%);
+                background-color: rgba(0, 0, 0, 0.7);
+                color: white;
+                padding: 10px 20px;
+                border-radius: 5px;
+                z-index: 1001; /* Ensure it's above other elements */
+                opacity: 0; /* Start hidden */
+                transition: top 0.3s ease-out, opacity 0.3s ease-out; /* Smooth transitions */
+                font-family: sans-serif;
+                font-size: 0.9em;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            }
         `;
         // Make sure styles are copied from previous turn if needed
         document.head.appendChild(style);
@@ -417,23 +436,23 @@ export class App {
             colorExpression = defaultPointColor;
         } else if (filteredIds.length === 0) {
             // Filters active, but result is empty. Use default color for all (effectively hiding via filter)
-             colorExpression = defaultPointColor; // Or keep default, filter handles visibility
+            colorExpression = defaultPointColor; // Or keep default, filter handles visibility
         }
-         else {
+        else {
             // Filters active and have results. Apply conditional coloring.
             // Ensure IDs in the literal array match the type expected by MapLibre (usually numbers or strings)
-             const literalIds = filteredIds.map(id => {
+            const literalIds = filteredIds.map(id => {
                 // Attempt to convert to number if possible, otherwise keep as string
-                 const numId = Number(id);
-                 return isNaN(numId) ? String(id) : numId;
-             });
+                const numId = Number(id);
+                return isNaN(numId) ? String(id) : numId;
+            });
 
             colorExpression = [
                 'case',
                 // --- IMPORTANT CHANGE: Use ['id'] to get feature ID ---
                 ['in', ['id'], ['literal', literalIds]],
                 highlightPointColor, // Color for filtered points
-                defaultPointColor    // Default color for non-filtered points
+                defaultPointColor // Default color for non-filtered points
             ];
         }
 
@@ -442,7 +461,7 @@ export class App {
         } catch (error) {
             console.error("Error setting paint property for highlighting:", error);
             // Fallback to default color in case of error
-             this.map.setPaintProperty(layerId, 'circle-color', defaultPointColor);
+            this.map.setPaintProperty(layerId, 'circle-color', defaultPointColor);
         }
     }
 
@@ -458,18 +477,18 @@ export class App {
             // Fetch IDs based on the *intersection* of active filters
             filteredIds = await this.filterCollection.getFilteredIds(); // Returns array (possibly empty)
 
-             if (filteredIds && filteredIds.length > 0) {
-                 // Ensure IDs match the type used in the vector tiles (number or string)
-                 const literalIdsForFilter = filteredIds.map(id => {
-                     const numId = Number(id);
-                     return isNaN(numId) ? String(id) : numId;
-                 });
-                 // Filter visibility: only show points whose ID is in the intersection
-                 const visibilityFilter = ['in', ['id'], ['literal', literalIdsForFilter]];
-                 this.map.setFilter('sites_fouilles-points', visibilityFilter);
-             } else {
-                 // No points match the intersection, filter to show none
-                 this.map.setFilter('sites_fouilles-points', ['in', ['id'], '']); // Effectively hides all
+            if (filteredIds && filteredIds.length > 0) {
+                // Ensure IDs match the type used in the vector tiles (number or string)
+                const literalIdsForFilter = filteredIds.map(id => {
+                    const numId = Number(id);
+                    return isNaN(numId) ? String(id) : numId;
+                });
+                // Filter visibility: only show points whose ID is in the intersection
+                const visibilityFilter = ['in', ['id'], ['literal', literalIdsForFilter]];
+                this.map.setFilter('sites_fouilles-points', visibilityFilter);
+            } else {
+                // No points match the intersection, filter to show none
+                this.map.setFilter('sites_fouilles-points', ['in', ['id'], '']); // Effectively hides all
             }
         }
 

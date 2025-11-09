@@ -16,21 +16,25 @@ const map = new maplibregl.Map({
                 tileSize: 512,
                 attribution: 'Carte des découvertes archéologiques dans le quartier des Palais Royaux, Alexandrie © CEAlex - © MapTiler © OpenStreetMap Contributors'
             },
+            
+            // --- START: MODIFIED SATELLITE SOURCE ---
             satellite: { 
                 type: 'raster', 
                 tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'], 
                 tileSize: 256, 
+                maxzoom: 19, // <-- This property fixes the "map data not available" issue
                 attribution: 'Tiles &copy; Esri' 
             },
+            // --- END: MODIFIED SATELLITE SOURCE ---
             
             // --- TEGOLA SOURCE (POINTS) ---
-            tegola_points: { type: 'vector', tiles: ['http://85.234.139.116:8080/maps/cartalex/{z}/{x}/{y}.pbf'], minzoom: 0, maxzoom: 22 },
+            tegola_points: { type: 'vector', tiles: ['http://localhost:8080/maps/cartalex/{z}/{x}/{y}.pbf'], minzoom: 0, maxzoom: 22 },
 
             // --- PG_TILESERV SOURCES ---
-            pgts_parcelles_region: { type: 'vector', tiles: ['http://85.234.139.116:7800/public.parcelles_region/{z}/{x}/{y}.pbf'], minzoom: 0, maxzoom: 22 },
-            pgts_espaces_publics: { type: 'vector', tiles: ['http://85.234.139.116:7800/public.espaces_publics/{z}/{x}/{y}.pbf'], minzoom: 0, maxzoom: 22 },
-            pgts_emprises: { type: 'vector', tiles: ['http://85.234.139.116:7800/public.emprises/{z}/{x}/{y}.pbf'], minzoom: 0, maxzoom: 22 },
-            pgts_littoral: { type: 'vector', tiles: ['http://85.234.139.116:7800/public.littoral/{z}/{x}/{y}.pbf'], minzoom: 0, maxzoom: 22 },
+            pgts_parcelles_region: { type: 'vector', tiles: ['http://localhost:7800/public.parcelles_region/{z}/{x}/{y}.pbf'], minzoom: 0, maxzoom: 22 },
+            pgts_espaces_publics: { type: 'vector', tiles: ['http://localhost:7800/public.espaces_publics/{z}/{x}/{y}.pbf'], minzoom: 0, maxzoom: 22 },
+            pgts_emprises: { type: 'vector', tiles: ['http://localhost:7800/public.emprises/{z}/{x}/{y}.pbf'], minzoom: 0, maxzoom: 22 },
+            pgts_littoral: { type: 'vector', tiles: ['http://localhost:7800/public.littoral/{z}/{x}/{y}.pbf'], minzoom: 0, maxzoom: 22 },
 
             // --- HISTORICAL MAP SOURCES ---
             "plan-adriani": { type: "raster", tiles: ["/adriani/{z}/{x}/{y}.png"], tileSize: 256, attribution: "Plan d'Adriani, 1934" },
@@ -187,4 +191,3 @@ map.on('load', () => {
         coordinatesDisplay.innerHTML = `Lat/Lon (WGS84): ${e.lngLat.lat.toFixed(6)}, ${e.lngLat.lng.toFixed(6)}`;
     });
 });
-

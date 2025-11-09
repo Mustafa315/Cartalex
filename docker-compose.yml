@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   db:
     image: postgis/postgis:13-3.1
@@ -5,9 +7,9 @@ services:
     ports:
       - "85.234.139.116:5432:5432"
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: cartalex_basileia_3857
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=cartalex_basileia_3857
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./db-init:/docker-entrypoint-initdb.d
@@ -18,24 +20,6 @@ services:
       retries: 5
     restart: unless-stopped
 
-  pgtileserv:
-    image: pramsey/pg_tileserv
-    container_name: cartalex_pgtileserv
-    ports:
-      - "7800:7800"
-    environment:
-      DATABASE_URL: postgres://postgres:postgres@db:5432/cartalex_basileia_3857
-      CORS_ORIGIN: "*"
-    depends_on:
-      db:
-        condition: service_healthy
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:7800/ || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   tegola:
     image: gospatial/tegola:v0.21.2
     container_name: cartalex_tegola
@@ -45,16 +29,24 @@ services:
     volumes:
       - ./tegola/tegola.toml:/etc/tegola/config.toml
     environment:
-      TEGOLA_WEBSERVER_CORS_ALLOW_ORIGIN: "*"
+      - TEGOLA_WEBSERVER_CORS_ALLOW_ORIGIN=*
     depends_on:
       db:
         condition: service_healthy
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/ || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+
+  pgtileserv:
+    image: pramsey/pg_tileserv
+    container_name: cartalex_pgtileserv
+    ports:
+      - "7800:7800"
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/cartalex_basileia_3857
+      - CORS_ORIGIN=*   # CORS fix
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
 
   app:
     build: .
@@ -62,27 +54,25 @@ services:
     ports:
       - "3000:3000"
     environment:
-      DB_HOST: db
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      DB_PORT: 5432
-      DB_NAME: cartalex_basileia_3857
-      CORS_ORIGIN: http://85.234.139.116
+      - DB_HOST=db
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_PORT=5432
+      - DB_NAME=cartalex_basileia_3857
+      - CORS_ORIGIN=http://85.234.139.116
     volumes:
-      - ./public:/usr/src/app/public
+      - ./public:/usr/src/app/public  
     depends_on:
       db:
         condition: service_healthy
-      pgtileserv:
-        condition: service_healthy
       tegola:
-        condition: service_healthy
+        condition: service_started
+      pgtileserv:
+        condition: service_started
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:3000/ || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
 volumes:
   pgdata:
+  # Test GitHub Actions
+#a new test
+#test7

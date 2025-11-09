@@ -28,13 +28,13 @@ const map = new maplibregl.Map({
             // --- END: MODIFIED SATELLITE SOURCE ---
             
             // --- TEGOLA SOURCE (POINTS) ---
-            tegola_points: { type: 'vector', tiles: ['http://localhost:8080/maps/cartalex/{z}/{x}/{y}.pbf'], minzoom: 0, maxzoom: 22 },
+            tegola_points: { type: 'vector', tiles: ['http://85.234.139.116:8080/maps/cartalex/{z}/{x}/{y}.pbf'], minzoom: 0, maxzoom: 22 },
 
             // --- PG_TILESERV SOURCES ---
-            pgts_parcelles_region: { type: 'vector', tiles: ['http://localhost:7800/public.parcelles_region/{z}/{x}/{y}.pbf'], minzoom: 0, maxzoom: 22 },
-            pgts_espaces_publics: { type: 'vector', tiles: ['http://localhost:7800/public.espaces_publics/{z}/{x}/{y}.pbf'], minzoom: 0, maxzoom: 22 },
-            pgts_emprises: { type: 'vector', tiles: ['http://localhost:7800/public.emprises/{z}/{x}/{y}.pbf'], minzoom: 0, maxzoom: 22 },
-            pgts_littoral: { type: 'vector', tiles: ['http://localhost:7800/public.littoral/{z}/{x}/{y}.pbf'], minzoom: 0, maxzoom: 22 },
+            pgts_parcelles_region: { type: 'vector', tiles: ['http://85.234.139.116:7800/public.parcelles_region/{z}/{x}/{y}.pbf'], minzoom: 0, maxzoom: 22 },
+            pgts_espaces_publics: { type: 'vector', tiles: ['http://85.234.139.116:7800/public.espaces_publics/{z}/{x}/{y}.pbf'], minzoom: 0, maxzoom: 22 },
+            pgts_emprises: { type: 'vector', tiles: ['http://85.234.139.116:7800/public.emprises/{z}/{x}/{y}.pbf'], minzoom: 0, maxzoom: 22 },
+            pgts_littoral: { type: 'vector', tiles: ['http://85.234.139.116:7800/public.littoral/{z}/{x}/{y}.pbf'], minzoom: 0, maxzoom: 22 },
 
             // --- HISTORICAL MAP SOURCES ---
             "plan-adriani": { type: "raster", tiles: ["/adriani/{z}/{x}/{y}.png"], tileSize: 256, attribution: "Plan d'Adriani, 1934" },

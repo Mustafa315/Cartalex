@@ -18,6 +18,24 @@ services:
       retries: 5
     restart: unless-stopped
 
+  pgtileserv:
+    image: pramsey/pg_tileserv
+    container_name: cartalex_pgtileserv
+    ports:
+      - "7800:7800"
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/cartalex_basileia_3857
+      CORS_ORIGIN: "*"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:7800/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   tegola:
     image: gospatial/tegola:v0.21.2
     container_name: cartalex_tegola
@@ -32,24 +50,11 @@ services:
       db:
         condition: service_healthy
     restart: unless-stopped
-
-  pgtileserv:
-    image: pramsey/pg_tileserv
-    container_name: cartalex_pgtileserv
-    ports:
-      - "7800:7800"
-    environment:
-      DATABASE_URL: postgres://postgres:postgres@db:5432/cartalex_basileia_3857
-      CORS_ORIGIN: "*"
-    depends_on:
-      db:
-        condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "pg_tileserv --version"]  # simple healthcheck
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/ || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
-    restart: unless-stopped
 
   app:
     build: .
@@ -68,11 +73,16 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      tegola:
-        condition: service_started
       pgtileserv:
         condition: service_healthy
+      tegola:
+        condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   pgdata:

@@ -5,7 +5,7 @@ services:
     image: postgis/postgis:13-3.1
     container_name: cartalex_db
     ports:
-      - "85.234.139.116:5432:5432"
+      - "5432:5432"  # مش على الـ IP العام، بس داخلي أو لو محتاج خارجي ممكن تغيره
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
@@ -33,6 +33,11 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
 
   pgtileserv:
@@ -42,10 +47,15 @@ services:
       - "7800:7800"
     environment:
       - DATABASE_URL=postgres://postgres:postgres@db:5432/cartalex_basileia_3857
-      - CORS_ORIGIN=*   # CORS fix
+      - CORS_ORIGIN=*
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:7800 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
 
   app:
@@ -66,13 +76,10 @@ services:
       db:
         condition: service_healthy
       tegola:
-        condition: service_started
+        condition: service_healthy
       pgtileserv:
-        condition: service_started
+        condition: service_healthy
     restart: unless-stopped
 
 volumes:
   pgdata:
-  # Test GitHub Actions
-#a new test
-#test7

@@ -19,6 +19,8 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    networks:
+      - cartalex_network
 
   tegola:
     image: gospatial/tegola:v0.21.2
@@ -34,6 +36,8 @@ services:
       db:
         condition: service_healthy
     restart: unless-stopped
+    networks:
+      - cartalex_network
 
   pgtileserv:
     image: pramsey/pg_tileserv
@@ -47,6 +51,8 @@ services:
       db:
         condition: service_healthy
     restart: unless-stopped
+    networks:
+      - cartalex_network
 
   app:
     build: .
@@ -70,9 +76,16 @@ services:
       pgtileserv:
         condition: service_started
     restart: unless-stopped
+    networks:
+      - cartalex_network
 
 volumes:
   pgdata:
+
+networks:
+  cartalex_network:
+    driver: bridge
+
   # Test GitHub Actions
 #a new test
-#test7
+#test8
